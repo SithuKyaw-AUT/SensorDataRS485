@@ -162,7 +162,7 @@ void loop() {
  // RS485.sendBreakMicroseconds(12000);
  // delayMicroseconds(9000);
 
-  char send_buffer[4];
+  //char send_buffer[4];
   //cmd.toCharArray(send_buffer, cmd.length() + 1);
   //convert_parity(send_buffer);
  // RS485.write(send_buffer);
