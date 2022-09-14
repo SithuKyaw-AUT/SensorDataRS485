@@ -6,12 +6,9 @@
  * @date 2022-09-05
  */
 
-/*
- *#include<Arduino.h>
- *#include<LoRaWan-RAK4630.h>                               //http://librarymanager/All#SX126x
- */
-#include<RS485.h>
 
+#include<ArduinoRS485.h>
+ 
 #define SensorData_PERIOD (20000)
 /*************************************
 
@@ -66,8 +63,7 @@ void sendCallback(int32_t status)
 }
 
 void setup() {
-  // Serial.begin(115200, RAK_AT_MODE);
-  Serial.begin(9600, RAK_AT_MODE);
+  Serial.begin(115200, RAK_AT_MODE);
   // begin RS485
   RS485.begin(9600);
   
@@ -148,48 +144,21 @@ void setup() {
   api.lorawan.registerSendCallback(sendCallback);
 }
 
-void loop() {
-  RAK_LORA_chan_rssi chan_arssi;
-
-  // being Transmission of RS485
-  RS485.beginTransmission();
-  
-  /* RS485 Power On */
-  pinMode(WB_IO2, OUTPUT);
-  digitalWrite(WB_IO2, HIGH);
-  delay(300);
-  /* RS485 Power On */
- // RS485.sendBreakMicroseconds(12000);
- // delayMicroseconds(9000);
-
-  //char send_buffer[4];
-  //cmd.toCharArray(send_buffer, cmd.length() + 1);
-  //convert_parity(send_buffer);
- // RS485.write(send_buffer);
- // RS485.flush();
-
- // delay(380);
-  
+void uplink_routine()
+{
   // enable reception of RS485
   RS485.receive();
-
+  
   /** Payload of Uplink */
   uint8_t data_len = 0;
-  //collected_data[data_len++] = (uint8_t) 't';     // ???
-  //collected_data[data_len++] = (uint8_t) 'e';     // ???
-  //collected_data[data_len++] = (uint8_t) 's';     // ???
-  //collected_data[data_len++] = (uint8_t) 't';     // ???
 
-  Serial.println("Data from RS485");
-  Serial.println(RS485.available());
-  Serial.println(RS485.read());
-  Serial.println("\nFirst byte of data, -1 if no data available \n");
- 
-  Serial.println("Data \n\n\n");
-  if (RS485.available()) {
-    Serial.println(RS485.read());
-  }
-  //uplink_routine();
+  //to test data sending to lorawan
+  //collected_data[data_len++] = (uint8_t) 't';     
+  //collected_data[data_len++] = (uint8_t) 'e';     
+  //collected_data[data_len++] = (uint8_t) 's';     
+  //collected_data[data_len++] = (uint8_t) 't';     
+
+  // read the data and save it in the collected_data array
   for(data_len = 0; data_len < RS485.available(); data_len++){
     collected_data[data_len] = RS485.read() & 0x7F;
     if(collected_data[data_len] == 13){
@@ -197,7 +166,9 @@ void loop() {
       break;
     }
   }
-  Serial.println("collected data");
+ 
+  Serial.println(" \n\n\n");
+  Serial.println("Data Packet:");
   for (int i = 0; i < data_len; i++) {
     Serial.printf("0x%02X ", collected_data[i]);
   }
@@ -210,6 +181,31 @@ void loop() {
     Serial.println("Sending failed");
   }
 
+}
+
+void loop() {
+  RAK_LORA_chan_rssi chan_arssi;
+
+  // being Transmission of RS485
+  RS485.beginTransmission();
+  
+  /* RS485 Power On */
+  pinMode(WB_IO2, OUTPUT);
+  digitalWrite(WB_IO2, HIGH);
+  delay(300);
+  /* RS485 Power On */
+  //RS485.sendBreakMicroseconds(12000);
+  //delayMicroseconds(9000);
+
+  // how to get the data from sensor
+  char send_buffer[4];
+  RS485.write(send_buffer);
+  RS485.flush();
+
+  delay(380);
+  
+  uplink_routine();
+
   // end Transmission of RS485
   RS485.endTransmission();
 
@@ -218,8 +214,7 @@ void loop() {
   digitalWrite(WB_IO2, LOW);
   delay(300);
   /* RS485 Power Off */
-
-  /*
+  
   Serial.print("Get RSSI =");
   Serial.println(api.lorawan.rssi.get());
 
@@ -236,8 +231,7 @@ void loop() {
         chan_arssi.rssi);
     }
   }
-  */
-  
+
   Serial.print("\r\n");
   delay(SensorData_PERIOD);
 }
